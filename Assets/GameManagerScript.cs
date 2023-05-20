@@ -3,70 +3,148 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManagerScript : MonoBehaviour
-{
+{    public GameObject playerPrefab;
+     public GameObject BlockPrefab;
+     public GameObject claerPrefab;
+     public GameObject ClaerText;
     //配列宣言
-    int[] map;
+    int[,] map;//レベルデザイン用
+    GameObject[,] field;//ゲーム管理用
+
+   
 
 
     // Start is called before the first frame update
-    void PrintArray()
+    Vector2Int GetPlayerIndex()
     {
-        string debugText = "";
-        for (int i = 0; i < map.Length; i++)
+        for (int y = 0; y < field.GetLength(0); y++)
         {
-            debugText += map[i].ToString() + ",";
-        }
-        //文字の出力
-        Debug.Log(debugText);
-    }
-    int GetPlayerIndex()
-    {
-        for (int i = 0; i < map.Length; i++)
-        {
-            if (map[i] == 1)
+            for (int x = 0; x < field.GetLength(1); x++)
             {
-                return i;
+                if (field[y,x] == null){ continue; }
+                if (field[y, x].tag == "Player") 
+                {
+                    return new Vector2Int(x, y); 
+                }
             }
         }
-        return -1;
-
+        return new Vector2Int(-1, -1);
     }
-    bool MoveNumber(int number,int moveFrom,int moveTo)
+    bool MoveObject(string tag,Vector2Int moveFrom, Vector2Int moveTo)
     {
-        if(moveTo < 0 || moveTo >= map.Length)
+        if (moveTo.y < 0 || moveTo.y >= map.GetLength(0))
         {
             return false;
         }
-        if (map[moveTo] == 2) {
-            int velocity = moveTo - moveFrom;
-            bool success = MoveNumber(2, moveTo, moveTo + velocity);
-            if(!success)
+        if (moveTo.x < 0 || moveTo.x >= map.GetLength(1))
+        {
+            return false;
+        }
+        if (field[moveTo.y,moveTo.x]!=null && field[moveTo.y, moveTo.x].tag == "Box")
+        {
+            Vector2Int velocity = moveTo - moveFrom;
+            bool success = MoveObject(tag, moveTo, moveTo + velocity);
+            if (!success) {return false; }
+        }
+        field[moveFrom.y, moveFrom.x].transform.position =new Vector3(moveTo.x,field.GetLength(0)-moveTo.y,0);
+        field[moveTo.y,moveTo.x] = field[moveFrom.y,moveFrom.x];
+        field[moveFrom.y, moveFrom.x] = null;
+        return true;
+    }
+
+    bool IsCleard()
+    {
+        //Vector2Int型の可変長配列の作成
+        List<Vector2Int>goals= new List<Vector2Int>();
+        //要素数を
+        for(int y=0;y<map.GetLength(0);y++)
+        {
+            for(int x = 0; x < map.GetLength(1); x++)
             {
+                //格納場所か否かを判断
+                if (map[y, x] == 3)
+                {
+                    //格納場所のインデックスを控えておく
+                    goals.Add(new Vector2Int(x, y));
+                }
+            }
+        }
+        //要素数はgoals.Countで取得
+        for(int i=0;i<goals.Count;i++)
+        {
+            GameObject f = field[goals[i].y,goals[i].x];
+            if(f == null || f.tag != "Box")
+            {
+                //1つでも箱がなければ条件未達成
                 return false;
             }
         }
-        map[moveTo] = number;
-        map[moveFrom] = 0;
+        //条件未達成でなければ条件達成
+        Debug.Log("Clear");
         return true;
+      
     }
+
     void Start()
     {
-        map= new int[] {0,0,0,1,0,2,0,2,0 };
-        PrintArray();
-    }
+        Screen.SetResolution(1980, 1080, false);
+
+        map = new int[,] {
+        {0, 0, 0, 0, 0},
+        {0, 1, 2, 3, 0},
+        {0, 0, 3, 2, 0},
+        {0, 0, 2, 0, 0},
+        {0, 0, 0, 0, 0},
+        };
+
+        field = new GameObject[map.GetLength(0), map.GetLength(1)];
+        for(int y=0; y<map.GetLength(0);y++)
+        {
+            for(int x=0; x < map.GetLength(1); x++)
+            {
+                if (map[y, x] == 1)
+                {
+                    field[y,x] = Instantiate(playerPrefab, new Vector3(x, map.GetLength(0) - y, 0), Quaternion.identity);
+                }
+                if (map[y, x] == 2)
+                {
+                    field[y,x] = Instantiate(BlockPrefab, new Vector3(x, map.GetLength(0) - y, 0), Quaternion.identity);
+                }
+                if (map[y, x] == 3)
+                {
+                    field[y, x] = Instantiate(claerPrefab, new Vector3(x, map.GetLength(0) - y, 0), Quaternion.identity);
+                }
+            }
+        }
+     }
 
     // Update is called once per frame
     void Update()
     {
 
-        int playerIndex = GetPlayerIndex();
-        if (Input.GetKeyDown(KeyCode.RightArrow)) {
-            MoveNumber(1, playerIndex, playerIndex + 1);
-               PrintArray();
+        Vector2Int playerIndex = GetPlayerIndex();
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            MoveObject("Box", playerIndex, playerIndex + new Vector2Int(1, 0));
         }
-        if(Input.GetKeyDown(KeyCode.LeftArrow)) {
-            MoveNumber(1, playerIndex, playerIndex - 1);
-            PrintArray();
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            MoveObject("Box", playerIndex, playerIndex + new Vector2Int(-1, 0));
         }
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            MoveObject("Box", playerIndex, playerIndex + new Vector2Int(0, -1));
+        }
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            MoveObject("Box", playerIndex, playerIndex + new Vector2Int(0, 1));
+        }
+        //もしクリアしていたら
+        if(IsCleard())
+        {
+            //テキストを有効にする
+            ClaerText.SetActive(true);
+        }
+       
     }
 }
