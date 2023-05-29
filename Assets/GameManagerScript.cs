@@ -1,18 +1,23 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
+using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 
 public class GameManagerScript : MonoBehaviour
 {    public GameObject playerPrefab;
      public GameObject BlockPrefab;
      public GameObject claerPrefab;
+     public GameObject WallPrefab;
+    public GameObject ParticlePrefab;
      public GameObject ClaerText;
     //配列宣言
     int[,] map;//レベルデザイン用
     GameObject[,] field;//ゲーム管理用
 
-   
-
+    
 
     // Start is called before the first frame update
     Vector2Int GetPlayerIndex()
@@ -46,9 +51,17 @@ public class GameManagerScript : MonoBehaviour
             bool success = MoveObject(tag, moveTo, moveTo + velocity);
             if (!success) {return false; }
         }
-        field[moveFrom.y, moveFrom.x].transform.position =new Vector3(moveTo.x,field.GetLength(0)-moveTo.y,0);
+        if (field[moveTo.y,moveTo.x]!=null && field[moveTo.y, moveTo.x].tag == "Wall")
+        {
+            return false;
+        }
+        Instantiate(ParticlePrefab, new Vector3(moveFrom.x - (map.GetLength(1) / 2), (map.GetLength(0) / 2) - moveFrom.y, 0), Quaternion.identity);
+        Instantiate(ParticlePrefab, new Vector3(moveFrom.x - (map.GetLength(1) / 2), (map.GetLength(0) / 2) - moveFrom.y, 0), Quaternion.identity);
+        Instantiate(ParticlePrefab, new Vector3(moveFrom.x - (map.GetLength(1) / 2), (map.GetLength(0) / 2) - moveFrom.y, 0), Quaternion.identity);
+        field[moveFrom.y, moveFrom.x].transform.position =new Vector3(moveTo.x - (map.GetLength(1) / 2), (map.GetLength(0) / 2) - moveTo.y, 0);
         field[moveTo.y,moveTo.x] = field[moveFrom.y,moveFrom.x];
         field[moveFrom.y, moveFrom.x] = null;
+ 
         return true;
     }
 
@@ -79,40 +92,72 @@ public class GameManagerScript : MonoBehaviour
                 return false;
             }
         }
-        //条件未達成でなければ条件達成
-        Debug.Log("Clear");
+
         return true;
       
     }
-
+    void Reset()
+    {   
+        field = new GameObject[map.GetLength(0), map.GetLength(1)];
+        
+        for (int y = 0; y < map.GetLength(0); y++)
+        {
+            for (int x = 0; x < map.GetLength(1); x++)
+            {
+                if (map[y, x] == 1)
+                {
+                    field[y, x] = Instantiate(playerPrefab, new Vector3(x - (map.GetLength(1) / 2), (map.GetLength(0) / 2) - y, 0), Quaternion.identity);
+                }
+                if (map[y, x] == 2)
+                {
+                    field[y, x] = Instantiate(BlockPrefab, new Vector3(x - (map.GetLength(1) / 2), (map.GetLength(0) / 2) - y, 0), Quaternion.identity);
+                }
+                if (map[y, x] == 3)
+                {
+                    field[y, x] = Instantiate(claerPrefab, new Vector3(x - (map.GetLength(1) / 2), (map.GetLength(0) / 2) - y, 0), Quaternion.identity);
+                }
+                if (map[y, x] == 4)
+                {
+                    field[y, x] = Instantiate(WallPrefab, new Vector3(x - (map.GetLength(1) / 2), (map.GetLength(0) / 2) - y, 0), Quaternion.identity);
+                }
+            }
+        }
+    }
     void Start()
     {
         Screen.SetResolution(1980, 1080, false);
 
         map = new int[,] {
-        {0, 0, 0, 0, 0},
-        {0, 1, 2, 3, 0},
-        {0, 0, 3, 2, 0},
-        {0, 0, 2, 0, 0},
-        {0, 0, 0, 0, 0},
+       {4,4,4,4,4,4,4,4,4,4,4,4},
+       {4,0,1,0,3,0,0,2,0,0,0,4},
+       {4,0,0,3,2,0,0,2,0,3,0,4},
+       {4,0,0,2,4,4,4,4,4,4,3,4},
+       {4,0,2,0,0,0,0,3,0,4,0,4},
+       {4,0,0,0,0,0,0,0,0,0,0,4},
+       {4,4,4,4,4,4,4,4,4,4,4,4},
         };
 
         field = new GameObject[map.GetLength(0), map.GetLength(1)];
-        for(int y=0; y<map.GetLength(0);y++)
+        for (int y=0; y<map.GetLength(0);y++)
         {
             for(int x=0; x < map.GetLength(1); x++)
             {
                 if (map[y, x] == 1)
                 {
-                    field[y,x] = Instantiate(playerPrefab, new Vector3(x, map.GetLength(0) - y, 0), Quaternion.identity);
+                    field[y, x] = Instantiate(playerPrefab, new Vector3(x - (map.GetLength(1) / 2), (map.GetLength(0) / 2) - y, 0),Quaternion.identity);
+
                 }
                 if (map[y, x] == 2)
                 {
-                    field[y,x] = Instantiate(BlockPrefab, new Vector3(x, map.GetLength(0) - y, 0), Quaternion.identity);
+                    field[y, x] = Instantiate(BlockPrefab, new Vector3(x - (map.GetLength(1) / 2), (map.GetLength(0) / 2) - y, 0), Quaternion.identity);
                 }
                 if (map[y, x] == 3)
                 {
-                    field[y, x] = Instantiate(claerPrefab, new Vector3(x, map.GetLength(0) - y, 0), Quaternion.identity);
+                    field[y, x] = Instantiate(claerPrefab, new Vector3(x - (map.GetLength(1) / 2), (map.GetLength(0) / 2) - y, 0), Quaternion.identity);
+                }
+                if (map[y, x] == 4)
+                {
+                    field[y, x] = Instantiate(WallPrefab, new Vector3(x - (map.GetLength(1) / 2), (map.GetLength(0) / 2) - y, 0), Quaternion.identity);
                 }
             }
         }
@@ -139,8 +184,13 @@ public class GameManagerScript : MonoBehaviour
         {
             MoveObject("Box", playerIndex, playerIndex + new Vector2Int(0, 1));
         }
+        //リセット
+        //if (Input.GetKeyDown(KeyCode.R))
+        //{
+        //    Reset();
+        //}
         //もしクリアしていたら
-        if(IsCleard())
+        if (IsCleard())
         {
             //テキストを有効にする
             ClaerText.SetActive(true);

@@ -637,6 +637,8 @@ MonoBehaviour:
   playerPrefab: {fileID: 7380462017099378733, guid: 2c35d71ee14e84145b3aa96923ab9fed, type: 3}
   BlockPrefab: {fileID: 404981430139853001, guid: a7fad58b780c132458c4bc9c14ee3e55, type: 3}
   claerPrefab: {fileID: 4059738279533112460, guid: d4592fadd704542439ac3d3eb1d9cf67, type: 3}
+  WallPrefab: {fileID: 2519839488872838273, guid: 2f7c1a7940bb14043a45266a0263e62f, type: 3}
+  ParticlePrefab: {fileID: 5275748415217419482, guid: eab91748678941b45ae6a476f8df2df7, type: 3}
   ClaerText: {fileID: 244166613}
 --- !u!4 &2094039956
 Transform:
@@ -646,7 +648,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2094039954}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.3645697, y: 3.522147, z: -1.0024786}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
